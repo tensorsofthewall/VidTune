@@ -5,6 +5,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:google_generative_ai/google_generative_ai.dart' as genAi;
 import 'package:http/http.dart' as http;
+import 'package:test_app/resources/file_handling.dart';
 import 'dart:convert';
 import 'resources/models.dart' as ModelResource;
 import 'resources/file.dart' as FileResource;
@@ -95,9 +96,9 @@ class _MyHomePageState extends State<MyHomePage> {
       inputFile = inputFile.files.first;
       
       inputExt = p.extension(inputFile.path);
-      print("Ext in img: ${imgExts.contains(inputExt)}");
-      print("Ext in vid: ${videoExts.contains(inputExt)}");
-      print("APIKEY: $_apiKey");
+      // print("Ext in img: ${imgExts.contains(inputExt)}");
+      // print("Ext in vid: ${videoExts.contains(inputExt)}");
+      // print("APIKEY: $_apiKey");
     } while(!(imgExts.contains(inputExt) || videoExts.contains(inputExt)));
     inputExt = inputExt.replaceAll(".","");
   }
@@ -114,7 +115,8 @@ class _MyHomePageState extends State<MyHomePage> {
     //   genAi.Content.multi([videoParts,prompt])
     // ]);
     // print(response.text);
-    fetchAvailableModels();
+    // fetchAvailableModels();
+    uploadMedia(inputFile);
   }
 
   @override

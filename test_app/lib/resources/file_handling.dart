@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:googleapis/artifactregistry/v1.dart';
 import 'dart:io';
 import 'file.dart' show FileResource;
@@ -12,8 +13,9 @@ class VideoConstants {
   factory VideoConstants() => constants; 
   VideoConstants._();
 
-  dynamic convertToBase64(File file) {
-    List<int> videoBytes = file.readAsBytesSync();
+  dynamic convertToBase64(PlatformFile file) {
+    final File fileForEncode = File(file.path??"");
+    List<int> videoBytes = fileForEncode.readAsBytesSync();
     String base64Video = base64Encode(videoBytes);
     return {'mime_type': 'video/mp4','data': base64Video};
   }
@@ -28,9 +30,9 @@ class VideoConstants {
 
 
 // Function for uploading media
-Future<void> uploadMedia(File file) async{
+Future<void> uploadMedia(PlatformFile file) async{
 
-  final Map<String, dynamic> payload = {
+  final payload = jsonEncode({
     'contents': [
       {
         'parts': [
@@ -40,7 +42,7 @@ Future<void> uploadMedia(File file) async{
         ]
       }
     ]
-  };
+  });
 //   '{"contents":[
 //     {
 //       "parts":[
@@ -58,9 +60,11 @@ Future<void> uploadMedia(File file) async{
   final response = await http.post(
     Uri.parse('https://generativelanguage.googleapis.com/upload/v1beta/files'),
     headers: {
-      'Content-Type': 'video/mp4',
+      'Content-Type': 'application/json',
       'X-Goog-Api-Key': constants.apiKey,
     },
     body: payload,
   );
+
+  print(response.statusCode);
 }
