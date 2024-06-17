@@ -41,6 +41,7 @@ dependencies:
   video_thumbnail: ^0.5.3
   googleapis: ^13.1.0
   google_generative_ai: ^0.4.3
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:

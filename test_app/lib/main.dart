@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
-import 'dart:io';
+// import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:google_generative_ai/google_generative_ai.dart' as genAi;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'resources/models.dart' as ModelResource;
+import 'resources/file.dart' as FileResource;
 
 const String _apiKey = String.fromEnvironment('API_KEY');
 void main() {
@@ -68,8 +72,6 @@ class _MyHomePageState extends State<MyHomePage> {
   var inputFile, inputExt;
 
   final model = genAi.GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
-
-  // final geminiRestAPI = ;
   
 
   void _incrementCounter() {
@@ -105,13 +107,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void sendToGoogle() async {
-    final video = await File(inputFile.path).readAsBytes();
-    final prompt = genAi.TextPart("Understand what is happening in this video. Summarize your explanation into a single sentence that will be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'.");
-    final videoParts = genAi.DataPart('video/mp4', video);
-    final response = await model.generateContent([
-      genAi.Content.multi([videoParts,prompt])
-    ]);
-    print(response.text);
+    // final video = await File(inputFile.path).readAsBytes();
+    // final prompt = genAi.TextPart("Understand what is happening in this video. Summarize your explanation into a single sentence that will be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'.");
+    // final videoParts = genAi.DataPart('video/mp4', video);
+    // final response = await model.generateContent([
+    //   genAi.Content.multi([videoParts,prompt])
+    // ]);
+    // print(response.text);
+    fetchAvailableModels();
   }
 
   @override
@@ -179,3 +182,28 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+
+
+Future<void> fetchAvailableModels() async {
+  final response = await http.get(
+    Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/'),
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Goog-Api-Key': _apiKey,
+    },
+  );
+
+  if (response.statusCode == 200) {
+    print("Success, pinged");
+    final decoded = json.decode(response.body) as Map<String, dynamic>;
+    List<ModelResource.ModelResource> models = ModelResource.ModelResource.fromJsonList(decoded['models']);
+    for (final m in models) {
+      print(m.displayName);
+    }
+  } else {
+    print("Failed, Error ${response.statusCode}");
+  }
+}
+
+
