@@ -1,15 +1,15 @@
 //Google FILE Resource (REST)
 class FileResource {
   final String name;
-  final String displayName;
-  final String mimeType;
-  final String sizeBytes;
-  final String createTime;
-  final String updateTime;
-  final String expirationTime;
-  final String sha256Hash;
-  final String uri;
-  final State state;
+  final String? displayName;
+  final String? mimeType;
+  final String? sizeBytes;
+  final String? createTime;
+  final String? updateTime;
+  final String? expirationTime;
+  final String? sha256Hash;
+  final String? uri;
+  final State? state;
   final Status? error;
   final VideoMetadata? videoMetadata;
 
@@ -17,13 +17,13 @@ class FileResource {
     required this.name,
     required this.displayName,
     required this.mimeType,
-    required this.sizeBytes,
-    required this.createTime,
-    required this.updateTime,
-    required this.expirationTime,
-    required this.sha256Hash,
-    required this.uri,
-    required this.state,
+    this.sizeBytes,
+    this.createTime,
+    this.updateTime,
+    this.expirationTime,
+    this.sha256Hash,
+    this.uri,
+    this.state,
     this.error,
     this.videoMetadata,
   });
@@ -31,7 +31,7 @@ class FileResource {
   factory FileResource.fromJson(Map<String, dynamic> json) {
     return FileResource(
       name: json['name'],
-      displayName: json['displayName'],
+      displayName: json['displayName']??"",
       mimeType: json['mimeType'],
       sizeBytes: json['sizeBytes'],
       createTime: json['createTime'],

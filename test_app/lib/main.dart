@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 // import 'dart:io';
-import 'package:path/path.dart' as p;
 import 'package:google_generative_ai/google_generative_ai.dart' as genAi;
 import 'package:http/http.dart' as http;
 import 'package:test_app/resources/file_handling.dart';
 import 'dart:convert';
 import 'resources/models.dart' as ModelResource;
-import 'resources/file.dart' as FileResource;
+import 'util/constants.dart' show extension2MimeType, modelInfoURL;
 
 const String _apiKey = String.fromEnvironment('API_KEY');
 void main() {
@@ -95,11 +94,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
       inputFile = inputFile.files.first;
       
-      inputExt = p.extension(inputFile.path);
-      // print("Ext in img: ${imgExts.contains(inputExt)}");
-      // print("Ext in vid: ${videoExts.contains(inputExt)}");
+      inputExt = inputFile.path.split(".").last;
+      print("Ext in map: ${extension2MimeType.containsKey(inputExt)}, $inputExt");
       // print("APIKEY: $_apiKey");
-    } while(!(imgExts.contains(inputExt) || videoExts.contains(inputExt)));
+    } while(!(extension2MimeType.containsKey(inputExt)));
     inputExt = inputExt.replaceAll(".","");
   }
 
@@ -117,6 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // print(response.text);
     // fetchAvailableModels();
     uploadMedia(inputFile);
+
   }
 
   @override
@@ -173,6 +172,11 @@ class _MyHomePageState extends State<MyHomePage> {
             tooltip: 'Send Data to Google',
             child: const Icon(Icons.send_sharp),
             ), 
+            FloatingActionButton(
+              onPressed: () {deleteMedia();},
+              tooltip: 'Delete all uploaded media',
+              child: const Icon(Icons.delete_forever),
+            ),
           ],
         ),
       ),
@@ -189,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 Future<void> fetchAvailableModels() async {
   final response = await http.get(
-    Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/'),
+    Uri.parse(modelInfoURL),
     headers: {
       'Content-Type': 'application/json; charset=UTF-8',
       'X-Goog-Api-Key': _apiKey,
