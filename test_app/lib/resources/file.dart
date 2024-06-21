@@ -1,6 +1,6 @@
 //Google FILE Resource (REST)
 class FileResource {
-  final String name;
+  final String? name;
   final String? displayName;
   final String? mimeType;
   final String? sizeBytes;
@@ -14,9 +14,9 @@ class FileResource {
   final VideoMetadata? videoMetadata;
 
   FileResource({
-    required this.name,
-    required this.displayName,
-    required this.mimeType,
+    this.name,
+    this.displayName,
+    this.mimeType,
     this.sizeBytes,
     this.createTime,
     this.updateTime,

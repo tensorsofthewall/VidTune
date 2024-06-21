@@ -1,16 +1,25 @@
+// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:open_file/open_file.dart';
-// import 'dart:io';
-import 'package:google_generative_ai/google_generative_ai.dart' as genAi;
-import 'package:http/http.dart' as http;
 import 'package:test_app/resources/file_handling.dart';
-import 'dart:convert';
-import 'resources/models.dart' as ModelResource;
-import 'util/constants.dart' show extension2MimeType, modelInfoURL;
+import 'util/constants.dart' show extension2MimeType;
 
-const String _apiKey = String.fromEnvironment('API_KEY');
-void main() {
+// Initialize Firebase
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+// Import Vertex AI for Firebase
+import 'package:firebase_vertexai/firebase_vertexai.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+
+// const String _apiKey = String.fromEnvironment('API_KEY');
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   runApp(const MyApp());
 }
 
@@ -69,10 +78,10 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> imgExts = ['.jpg','jpeg','.png','.heic','.tiff'];
   List<String> videoExts = ['.avi','.m4v','.mkv','.mmv','.mov','.mpg','.mp4'];
 
-  var inputFile, inputExt;
+  dynamic inputFile, inputExt;
 
-  final model = genAi.GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
-  
+  final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(model: 'gemini-1.5-flash');
+  final FirebaseStorage storage = FirebaseStorage.instance;
 
   void _incrementCounter() {
     setState(() {
@@ -95,27 +104,39 @@ class _MyHomePageState extends State<MyHomePage> {
       inputFile = inputFile.files.first;
       
       inputExt = inputFile.path.split(".").last;
-      print("Ext in map: ${extension2MimeType.containsKey(inputExt)}, $inputExt");
+      // print("Ext in map: ${extension2MimeType.containsKey(inputExt)}, $inputExt");
       // print("APIKEY: $_apiKey");
     } while(!(extension2MimeType.containsKey(inputExt)));
     inputExt = inputExt.replaceAll(".","");
   }
 
-  void _openFile(PlatformFile file) {
-    OpenFile.open(file.path);
-  }
+  // void _openFile(PlatformFile file) {
+  //   OpenFile.open(file.path);
+  // }
 
   void sendToGoogle() async {
     // final video = await File(inputFile.path).readAsBytes();
-    // final prompt = genAi.TextPart("Understand what is happening in this video. Summarize your explanation into a single sentence that will be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'.");
-    // final videoParts = genAi.DataPart('video/mp4', video);
-    // final response = await model.generateContent([
-    //   genAi.Content.multi([videoParts,prompt])
-    // ]);
-    // print(response.text);
+    // Decide videoParts based on file size (>7MB => Upload to Cloud Storage and use as FilePart)
+    late FileData videoParts;
+    // if (video.lengthInBytes >= 7*1024*1024) {
+    //   videoParts = await uploadMedia(inputFile, storage.ref());
+    //   // print(videoParts)
+    // } else {
+    //   videoParts = DataPart('video/mp4',video);
+    // }
+    videoParts = FileData('video/mp4', 'gs://vibematch-6ddcd.appspot.com/test_reel_video.mp4');
+    print("File Data ready");
+    final prompt = TextPart("You're a multimodal language model that can analyze images and videos and understand the content. Given an image or video, you will describe and explain what is happening, and will then summarize your explanation into a single sentence that will be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'. You must return your response in JSON format consisting of the keys 'Content Explanation' and 'Music Prompt' only. No other response format is acceptable.");
+    print("Prompt readyy");
+    
+    print("Sending to Gemini");
+    final response = await model.generateContent([
+      Content.multi([prompt, videoParts])
+    ]);
+    print("Received from gemini");
+    
+    print(response.text);
     // fetchAvailableModels();
-    uploadMedia(inputFile);
-
   }
 
   @override
@@ -173,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: const Icon(Icons.send_sharp),
             ), 
             FloatingActionButton(
-              onPressed: () {deleteMedia();},
+              onPressed: () {deleteAllMedia(storage.ref());},
               tooltip: 'Delete all uploaded media',
               child: const Icon(Icons.delete_forever),
             ),
@@ -186,29 +207,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
-}
-
-
-
-Future<void> fetchAvailableModels() async {
-  final response = await http.get(
-    Uri.parse(modelInfoURL),
-    headers: {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'X-Goog-Api-Key': _apiKey,
-    },
-  );
-
-  if (response.statusCode == 200) {
-    print("Success, pinged");
-    final decoded = json.decode(response.body) as Map<String, dynamic>;
-    List<ModelResource.ModelResource> models = ModelResource.ModelResource.fromJsonList(decoded['models']);
-    for (final m in models) {
-      print(m.displayName);
-    }
-  } else {
-    print("Failed, Error ${response.statusCode}");
   }
 }
 

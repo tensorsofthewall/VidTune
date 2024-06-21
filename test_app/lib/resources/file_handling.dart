@@ -1,81 +1,62 @@
-import 'dart:convert';
-
+import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_vertexai/firebase_vertexai.dart';
 import 'dart:io';
-import 'file.dart' show FileResource;
-import 'package:http/http.dart' as http;
-import 'package:test_app/util/constants.dart' as constants;
+import 'package:test_app/util/constants.dart' as app_constants;
+import 'package:firebase_storage/firebase_storage.dart';
 
-class FileConstants {
-  static final FileConstants constants = FileConstants._();
-
-  factory FileConstants() => constants; 
-  FileConstants._();
-
-  dynamic convertToBase64(PlatformFile file) {
-    final File fileForEncode = File(file.path??"");
-    List<int> videoBytes = fileForEncode.readAsBytesSync();
-    String base64Video = base64Encode(videoBytes);
-    print(file.name);
-    return {'displayName': file.name,'mime_type': 'video/mp4','data': base64Video,};
-  }
-
-  dynamic decodeBase64(String base64Encoding) {
-    String decoded = utf8.decode(base64Url.decode(base64Encoding));
-    return decoded;
-  }
-}
 
 // Function for uploading media
-Future<void> uploadMedia(PlatformFile file) async{
+Future<FileData> uploadMedia(PlatformFile file, Reference storage) async{
+  final fileForFirebase = File(file.path??"");
+  final fileRef = storage.child(file.name);
 
-  final payload = jsonEncode({
-    'contents': [
-      {
-        'file': FileConstants().convertToBase64(file),
-      }
-    ]
-  });
-  final response = await http.post(
-    Uri.parse(constants.mediaFileUploadURL),
-    headers: {
-      'Content-Type': 'video/mp4',
-      'X-Goog-Api-Key': constants.apiKey,
-    },
-    body: payload,
-  );
-  print(response.body);
-}
+  final information = await FFprobeKit.getMediaInformation(file.path??"");
+  final uploadTask = fileRef.putFile(
+    fileForFirebase, 
+    SettableMetadata(
+      contentType: app_constants.extension2MimeType[file.path?.split(".").last],
+      customMetadata:  {'videoDuration': (await information.getDuration()).toString()}
+    ));
 
-void deleteMedia() async {
-  var uploadedFiles = fetchAllMedia();
-}
-
-dynamic fetchAllMedia() async {
-  final response = await http.get(
-    Uri.parse(constants.mediaFileMetadataURL),
-    headers: {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'X-Goog-Api-Key': constants.apiKey,
-    },
-  );
-
-  var uploadedFiles;
-
-  if (response.statusCode == 200) {
-    print("Success, pinged");
-    final decoded = json.decode(response.body) as Map<String, dynamic>;
-    uploadedFiles = FileResource.fromJsonList(decoded['files']);
-    for (final f in uploadedFiles) {
-      print(f.displayName);
+  uploadTask.snapshotEvents.listen((TaskSnapshot taskSnapshot) {
+    switch(taskSnapshot.state) {
+      case TaskState.running:
+        // Task in Progress
+        print("File upload progress: ${100.0 * (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes)}");
+      case TaskState.paused:
+        // Task Paused
+        print("File upload progress: ${100.0 * (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes)}} (paused)");
+      case TaskState.success:
+        print("File uploaded to bucket.");
+      case TaskState.canceled:
+        print("File upload canceled.");
+      case TaskState.error:
+        print("File upload failed.");
     }
-  } else {
-    print("Failed, Error ${response.statusCode}");
-  }
-  return uploadedFiles;
+  });
+  
+  final snapshot = await uploadTask.whenComplete(() => null);
+  final metadata = await snapshot.ref.getMetadata();
+  final mimeType = metadata.contentType.toString();
+  final bucket = fileRef.bucket;
+  final fullPath = fileRef.fullPath;
+
+  print("Metadata stuff: $mimeType, $bucket, $fullPath");
+
+  final filePart = FileData(mimeType, 'gs://$bucket/$fullPath');
+  return filePart;
 }
 
-
-FileResource createFileMetadata(PlatformFile file) {
-  return FileResource(name: "", displayName: file.name, mimeType: file.extension.toString());
+Future<void> deleteAllMedia(Reference storage) async {
+  final listResult = await storage.listAll();
+  if (listResult.items.isNotEmpty) {
+    for (var item in listResult.items) {
+      print(item.name);
+      // await item.delete(); // Commented temporarily
+    }
+    print("All media has been deleted from Cloud.");
+  } else {
+    print("No media to delete from Cloud.");
+  }
 }
