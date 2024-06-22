@@ -1,6 +1,4 @@
-const String mediaFileUploadURL = "https://generativelanguage.googleapis.com/upload/v1beta/files";
-const String mediaFileMetadataURL = "https://generativelanguage.googleapis.com/v1beta/files";
-const String modelInfoURL = "https://generativelanguage.googleapis.com/v1beta/models/";
+const String musicGenApi = 'http://10.147.71.252:8000/generate_music';
 const String apiKey = String.fromEnvironment('API_KEY');
 
 const Map<String, String> extension2MimeType = {

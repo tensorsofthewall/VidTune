@@ -1,9 +1,9 @@
-// import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:test_app/resources/file_handling.dart';
 import 'util/constants.dart' show extension2MimeType;
-
+import 'dart:convert';
 // Initialize Firebase
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -75,12 +75,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  List<String> imgExts = ['.jpg','jpeg','.png','.heic','.tiff'];
-  List<String> videoExts = ['.avi','.m4v','.mkv','.mmv','.mov','.mpg','.mp4'];
+  // late;
 
-  dynamic inputFile, inputExt;
+  dynamic inputFile;
 
-  final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(model: 'gemini-1.5-flash');
+  Map<String, dynamic> contentExplanation = {};
+  bool shouldShowExplanationWidget = false;
+
+  final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(
+    model: 'gemini-1.5-flash', 
+    generationConfig: GenerationConfig(responseMimeType: 'application/json'
+  ));
   final FirebaseStorage storage = FirebaseStorage.instance;
 
   void _incrementCounter() {
@@ -102,12 +107,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print(inputFile);
 
       inputFile = inputFile.files.first;
-      
-      inputExt = inputFile.path.split(".").last;
-      // print("Ext in map: ${extension2MimeType.containsKey(inputExt)}, $inputExt");
-      // print("APIKEY: $_apiKey");
-    } while(!(extension2MimeType.containsKey(inputExt)));
-    inputExt = inputExt.replaceAll(".","");
+
+    } while(!(extension2MimeType.containsKey(inputFile.path.split(".").last)));
   }
 
   // void _openFile(PlatformFile file) {
@@ -115,29 +116,60 @@ class _MyHomePageState extends State<MyHomePage> {
   // }
 
   void sendToGoogle() async {
-    // final video = await File(inputFile.path).readAsBytes();
-    // Decide videoParts based on file size (>7MB => Upload to Cloud Storage and use as FilePart)
-    late FileData videoParts;
-    // if (video.lengthInBytes >= 7*1024*1024) {
-    //   videoParts = await uploadMedia(inputFile, storage.ref());
-    //   // print(videoParts)
-    // } else {
-    //   videoParts = DataPart('video/mp4',video);
-    // }
-    videoParts = FileData('video/mp4', 'gs://vibematch-6ddcd.appspot.com/test_reel_video.mp4');
-    print("File Data ready");
-    final prompt = TextPart("You're a multimodal language model that can analyze images and videos and understand the content. Given an image or video, you will describe and explain what is happening, and will then summarize your explanation into a single sentence that will be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'. You must return your response in JSON format consisting of the keys 'Content Explanation' and 'Music Prompt' only. No other response format is acceptable.");
-    print("Prompt readyy");
+    if (inputFile != null) {
+      final video = await File(inputFile.path).readAsBytes();
+      late dynamic videoParts;
+      
+      // Decide videoParts based on file size (>7MB => Upload to Cloud Storage and use as FilePart)
+      if (video.lengthInBytes >= 7*1024*1024) {
+        videoParts = await uploadMedia(inputFile, storage.ref());
+        // print(videoParts)
+      } else {
+        videoParts = DataPart('video/mp4',video);
+      }
+      
+      // videoParts = FileData('video/mp4', 'gs://vibematch-6ddcd.appspot.com/test_reel_video.mp4');
+      // videoParts = FileData('image/jpeg', 'gs://vibematch-6ddcd.appspot.com/test.jpg');
+      
+      
+      final prompt = TextPart(
+        '''
+        You're a multimodal language model that can analyze images and videos and understand the content. Given an image or video, you will describe and explain what is happening. You will then summarize your explanation into a single sentence that can be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'. You must return your response using the following JSON schema: {"Content Explanation": "string", "Music Prompt": "string"}. \n\n An sample response is : {"Content Explanation": "The video shows a beautiful beach scene with the ocean and rocks. There are white text overlays on the video which read 'some special place for you'. The calm waves crashing against the shore and the clear blue sky create a relaxing and serene ambiance.", "Music Prompt": "A calming and serene piece of music that evokes a sense of peace and relaxation, inspired by the beautiful beach scene."}
+        '''
+      );
+      
+      
+      print("Sending to Gemini");
+      final response = await model.generateContent([
+        Content.multi([prompt, videoParts])
+      ]);
+      print("Received from gemini");
+
+      print(response.text);
+
+      final responseText = json.decode(response.text.toString());
+      print(responseText["Content Explanation"]);
+      setState(() {
+        contentExplanation = responseText;
+        shouldShowExplanationWidget = true;
+        inputFile = null;
+      });
+    } else {
+      print("No file was selected.");
+    }
+
     
-    print("Sending to Gemini");
-    final response = await model.generateContent([
-      Content.multi([prompt, videoParts])
-    ]);
-    print("Received from gemini");
-    
-    print(response.text);
     // fetchAvailableModels();
   }
+
+  // Map<String, dynamic> convertStringToJson(String str) {
+  //   // Replace single quotes with double quotes to match JSON format
+  //   String jsonString = str.replaceAll("'", '"');
+  //   print(jsonString);
+
+  //   // Decode the JSON string
+  //   return json.decode(jsonString);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -179,18 +211,26 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               'You have clicked the button this many times: $_counter',
             ),
+            Visibility(
+              visible: shouldShowExplanationWidget,
+              child: shouldShowExplanationWidget == true ? Text("Explanation: ${contentExplanation['Content Explanation']}") : Text(""),
+            ),
+            Visibility(
+              visible: shouldShowExplanationWidget,
+              child: shouldShowExplanationWidget == true ? Text("Prompt: ${contentExplanation['Music Prompt']}") : Text(""),
+            ),
             // Text(
             //   '$_counter',
             //   style: Theme.of(context).textTheme.headlineMedium,
             // ),
             FloatingActionButton(
             onPressed: () {_pickFile(); },
-            tooltip: 'Increment',
+            tooltip: 'Upload File (image/video only)',
             child: const Icon(Icons.upload_file_rounded),
             ),
             FloatingActionButton(
             onPressed: () {sendToGoogle();},
-            tooltip: 'Send Data to Google',
+            tooltip: 'Ask Gemini to explain',
             child: const Icon(Icons.send_sharp),
             ), 
             FloatingActionButton(
