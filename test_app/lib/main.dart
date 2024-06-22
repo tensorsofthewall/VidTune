@@ -1,9 +1,18 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
+
+// Audio Player
+import 'package:audioplayers/audioplayers.dart';
+
+// Import methods and constants
 import 'package:test_app/resources/file_handling.dart';
 import 'util/constants.dart' show extension2MimeType;
-import 'dart:convert';
+import 'package:test_app/resources/musicgen_api.dart';
+
+
 // Initialize Firebase
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -81,12 +90,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Map<String, dynamic> contentExplanation = {};
   bool shouldShowExplanationWidget = false;
+  bool shouldShowAudioWidget = false;
+
+  Uint8List? audioBytes;
 
   final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(
     model: 'gemini-1.5-flash', 
     generationConfig: GenerationConfig(responseMimeType: 'application/json'
   ));
   final FirebaseStorage storage = FirebaseStorage.instance;
+  late AudioPlayer player = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    player = AudioPlayer();
+
+    player.setReleaseMode(ReleaseMode.stop);
+    // await player.setSource(BytesSource(response.bodyBytes));
+    // await player.resume();
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -157,9 +180,17 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       print("No file was selected.");
     }
+  }
 
-    
-    // fetchAvailableModels();
+  void vibeMatch(String musicPrompt) async{
+    List<String> prompts = [];
+    prompts.add(musicPrompt);
+    final response = await generate_music(prompts);
+    await player.setSource(BytesSource(response.bodyBytes));
+    setState(() {
+      audioBytes = response.bodyBytes;
+      shouldShowAudioWidget = true;
+    });
   }
 
   // Map<String, dynamic> convertStringToJson(String str) {
@@ -223,20 +254,42 @@ class _MyHomePageState extends State<MyHomePage> {
             //   '$_counter',
             //   style: Theme.of(context).textTheme.headlineMedium,
             // ),
-            FloatingActionButton(
+            IconButton(
             onPressed: () {_pickFile(); },
             tooltip: 'Upload File (image/video only)',
-            child: const Icon(Icons.upload_file_rounded),
+            icon: Icon(Icons.upload_file_rounded),
             ),
-            FloatingActionButton(
+            IconButton(
             onPressed: () {sendToGoogle();},
             tooltip: 'Ask Gemini to explain',
-            child: const Icon(Icons.send_sharp),
+            icon: Icon(Icons.send_sharp),
             ), 
-            FloatingActionButton(
+            IconButton(
               onPressed: () {deleteAllMedia(storage.ref());},
               tooltip: 'Delete all uploaded media',
-              child: const Icon(Icons.delete_forever),
+              icon: Icon(Icons.delete_forever),
+            ),
+            Visibility(
+              visible: shouldShowExplanationWidget,
+              child: IconButton(
+                onPressed: () { vibeMatch(contentExplanation['Music Prompt']);},//"Lofi Music for Coding"
+                tooltip: 'Generate music',
+                icon: Icon(Icons.create_outlined),
+              ),
+            ),
+            Visibility(
+              visible: shouldShowAudioWidget,
+              child: IconButton(
+                onPressed: () async => {await player.resume()},
+                icon: Icon(Icons.play_arrow),
+              ),
+            ),
+            Visibility(
+              visible: shouldShowAudioWidget,
+              child: IconButton(
+                onPressed: () async => {await player.stop()},
+                icon: Icon(Icons.stop_circle),
+              ),
             ),
           ],
         ),
@@ -245,7 +298,8 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ), // This trailing comma makes auto-formatting nicer for build methods.      
+      
     );
   }
 }

@@ -53,7 +53,7 @@ Future<void> deleteAllMedia(Reference storage) async {
   if (listResult.items.isNotEmpty) {
     for (var item in listResult.items) {
       print(item.name);
-      // await item.delete(); // Commented temporarily
+      await item.delete(); // Commented temporarily
     }
     print("All media has been deleted from Cloud.");
   } else {
