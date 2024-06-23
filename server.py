@@ -4,12 +4,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 import torch
+from torch.cuda import memory_allocated, memory_reserved
 from audiocraft.models import musicgen
 import numpy as np
 import io
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from scipy.io.wavfile import write as wav_write
 import uvicorn
+import psutil
 
 warnings.simplefilter('ignore')
 
@@ -33,7 +35,12 @@ else:
     args.model_name = f"facebook/{args.model}"
 
 # Load the model with the provided arguments
-musicgen_model = musicgen.MusicGen.get_pretrained(args.model_name, device=args.device)
+try:
+    musicgen_model = musicgen.MusicGen.get_pretrained(args.model_name, device=args.device)
+    model_loaded = True
+except Exception as e:
+    musicgen_model = None
+    model_loaded = False
 
 class MusicRequest(BaseModel):
     prompts: List[str]
@@ -41,6 +48,9 @@ class MusicRequest(BaseModel):
 
 @app.post("/generate_music")
 def generate_music(request: MusicRequest):
+    if not model_loaded:
+        raise HTTPException(status_code=500, detail="Model is not loaded.")
+    
     try:
         musicgen_model.set_generation_params(duration=request.duration)
         result = musicgen_model.generate(request.prompts, progress=False)
@@ -56,6 +66,25 @@ def generate_music(request: MusicRequest):
         return StreamingResponse(buffer, media_type="audio/wav")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+def health_check():
+    cpu_usage = psutil.cpu_percent(interval=1)
+    ram_usage = psutil.virtual_memory().percent
+    stats = {
+        "server_running": True,
+        "model_loaded": model_loaded,
+        "cpu_usage_percent": cpu_usage,
+        "ram_usage_percent": ram_usage
+    }
+    if args.device == "cuda" and torch.cuda.is_available():
+        gpu_memory_allocated = memory_allocated()
+        gpu_memory_reserved = memory_reserved()
+        stats.update({
+            "gpu_memory_allocated": gpu_memory_allocated,
+            "gpu_memory_reserved": gpu_memory_reserved
+        })
+    return JSONResponse(content=stats)
 
 if __name__ == "__main__":
     uvicorn.run(app, host=args.host, port=args.port)
