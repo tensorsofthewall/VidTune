@@ -9,7 +9,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 // Import methods and constants
 import 'package:vibematch/resources/file_handling.dart';
-import 'util/constants.dart' show extension2MimeType;
+import 'util/constants.dart' show extension2MimeType, geminiSystemInstructions, type2MimeTypes;
 import 'package:vibematch/resources/musicgen_api.dart';
 
 
@@ -87,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // late;
 
   dynamic inputFile;
+  dynamic inputExt;
 
   Map<String, dynamic> geminiOutput = {};
   bool shouldShowExplanationWidget = false;
@@ -96,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(
     model: 'gemini-1.5-flash', 
+    systemInstruction: Content.system(geminiSystemInstructions),
     generationConfig: GenerationConfig(responseMimeType: 'application/json'
   ));
   final FirebaseStorage storage = FirebaseStorage.instance;
@@ -132,6 +134,10 @@ class _MyHomePageState extends State<MyHomePage> {
       inputFile = inputFile.files.first;
 
     } while(!(extension2MimeType.containsKey(inputFile.path.split(".").last)));
+
+    setState(() {
+      inputExt = inputFile.path.split(".").last.toString();
+    });
   }
 
   // void _openFile(PlatformFile file) {
@@ -140,15 +146,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void sendToGoogle() async {
     if (inputFile != null) {
-      final video = await File(inputFile.path).readAsBytes();
-      late dynamic videoParts;
+      final file = await File(inputFile.path).readAsBytes();
+      late dynamic fileParts;
       
-      // Decide videoParts based on file size (>7MB => Upload to Cloud Storage and use as FilePart)
-      if (video.lengthInBytes >= 7*1024*1024) {
-        videoParts = await uploadMedia(inputFile, storage.ref());
-        // print(videoParts)
+      // Decide fileParts based on file size (>7MB => Upload to Cloud Storage and use as FilePart)
+      if (file.lengthInBytes >= 7*1024*1024) {
+        fileParts = await uploadMedia(inputFile, storage.ref());
+        // print(fileParts)
       } else {
-        videoParts = DataPart('video/mp4',video);
+        fileParts = DataPart(extension2MimeType[inputExt].toString(),file);
       }
       
       // videoParts = FileData('video/mp4', 'gs://vibematch-6ddcd.appspot.com/test_reel_video.mp4');
@@ -157,25 +163,27 @@ class _MyHomePageState extends State<MyHomePage> {
       
       final prompt = TextPart(
         '''
-        You're a multimodal language model that can analyze images and videos and understand the content. Given an image or video, you will describe and explain what is happening. You will then summarize your explanation into a single sentence that can be used as a prompt for music generation models such as 'MusicLM', 'MusicGen', and 'MuseGAN'. You must return your response using the following JSON schema: {"Content Explanation": "string", "Music Prompt": "string"}. \n\n An sample response is : {"Content Explanation": "The video shows a beautiful beach scene with the ocean and rocks. There are white text overlays on the video which read 'some special place for you'. The calm waves crashing against the shore and the clear blue sky create a relaxing and serene ambiance.", "Music Prompt": "A calming and serene piece of music that evokes a sense of peace and relaxation, inspired by the beautiful beach scene."}
+        Describe this ${type2MimeTypes.entries.firstWhere((k) => k.value.contains(inputExt)).key} and generate a prompt for music generation.
         '''
       );
+
+      print(prompt.text);
       
       
       // print("Sending to Gemini");
       final response = await model.generateContent([
-        Content.multi([prompt, videoParts])
+        Content.multi([prompt, fileParts])
       ]);
       // print("Received from gemini");
 
       // print(response.text);
 
       final responseText = json.decode(response.text.toString());
-      // print(responseText["Content Explanation"]);
       setState(() {
         geminiOutput = responseText;
         shouldShowExplanationWidget = true;
         inputFile = null;
+        inputExt = null;
       });
     } else {
       // print("No file was selected.");
@@ -244,7 +252,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Visibility(
               visible: shouldShowExplanationWidget,
-              child: shouldShowExplanationWidget == true ? Text("Explanation: ${geminiOutput['Content Explanation']}") : const Text(""),
+              child: shouldShowExplanationWidget == true ? Text("Description: ${geminiOutput['Content Description']}") : const Text(""),
             ),
             Visibility(
               visible: shouldShowExplanationWidget,
