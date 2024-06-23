@@ -16,14 +16,16 @@ parser.add_argument(
 parser.add_argument(
     "--output_file", type=str, default="output.wav", help="Output file name"
 )
+parser.add_argument(
+    "--duration", type=int, default=10, help="Duration of generated music in seconds"
+)
 
 args = parser.parse_args()
 
-
-def generate_music(server_url, prompts, output_file):
+def generate_music(server_url, prompts, duration, output_file):
     url = f"{server_url}/generate_music"
     headers = {"Content-Type": "application/json"}
-    data = {"prompts": prompts}
+    data = {"prompts": prompts, "duration": duration}
 
     response = requests.post(url, json=data, headers=headers)
 
@@ -34,6 +36,5 @@ def generate_music(server_url, prompts, output_file):
     else:
         print(f"Failed to generate music: {response.status_code}, {response.text}")
 
-
 if __name__ == "__main__":
-    generate_music(args.server_url, args.prompts, args.output_file)
+    generate_music(args.server_url, args.prompts, args.duration, args.output_file)
