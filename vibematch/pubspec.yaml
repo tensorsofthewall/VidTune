@@ -1,0 +1,44 @@
+name: vibematch
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.4.1 <4.0.0'
+
+dependencies:
+  ffmpeg_kit_flutter: ^6.0.3
+  file_picker: ^8.0.5
+  firebase_auth: ^5.1.1
+  firebase_core: ^3.1.1
+  firebase_storage: ^12.1.0
+  firebase_vertexai: ^0.2.2+1
+  flutter:
+    sdk: flutter
+  flutter_native_splash: ^2.4.0
+  google_sign_in: ^6.2.1
+  http: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  assets:
+    - assets/test_logo.png
+  uses-material-design: true
+
+# Add splash screen specification
+# Basic setup, check docs for more info
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+  image: assets/test_logo.png
+  color: "#FFFFFF"
+  # Android 12+ handles splash screen differently.
+  android_12:
+    image: assets/test_logo.png
+    color: "#FFFFFF"
+  

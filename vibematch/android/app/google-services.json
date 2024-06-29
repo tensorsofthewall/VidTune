@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "180711058554",
+    "project_id": "vibematch-6ddcd",
+    "storage_bucket": "vibematch-6ddcd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:180711058554:android:0956b1b9091274cda4dfc3",
+        "android_client_info": {
+          "package_name": "com.vibematch.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC91ikMcoRCLjOfaystIXTm1F_fyvkCKTc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
