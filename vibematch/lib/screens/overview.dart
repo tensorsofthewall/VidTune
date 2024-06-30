@@ -22,11 +22,10 @@ class OverviewPage extends StatelessWidget {
                 }
               },
               child: const Text("Custom Music Prompt"),
-            )
+            ),
           ),
           Expanded(
-            child: 
-            TextButton(
+            child: TextButton(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return const HomePage();
@@ -36,10 +35,10 @@ class OverviewPage extends StatelessWidget {
                 }
               },
               child: const Text("Video-to-Audio"),
-            )
+            ),
           ),
         ],
-      )
+      ),
     );
   }
 }

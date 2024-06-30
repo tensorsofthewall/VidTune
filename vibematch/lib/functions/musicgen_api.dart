@@ -1,5 +1,5 @@
 // Methods for handling MusicGen calls (hosted on zeroTier as of v0.1.0)
-import 'dart:convert';
+import 'dart:convert' show jsonEncode;
 
 import 'package:http/http.dart' as http;
 import 'package:vibematch/assets/constants.dart' as app_constants;

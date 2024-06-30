@@ -2,7 +2,7 @@
 import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_vertexai/firebase_vertexai.dart';
-import 'dart:io';
+import 'dart:io' show File;
 import 'package:vibematch/assets/constants.dart' as app_constants;
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -12,9 +12,9 @@ Future<PlatformFile?> selectFile() async {
   do {
     FilePickerResult? selected = await FilePicker.platform.pickFiles(type: FileType.any, allowedExtensions: null, allowMultiple: false, allowCompression: true);
 
-    if (selected == null) continue;
+    if (selected == null) return null ;
     inputFile = selected.files.first;
-  } while(!app_constants.extension2MimeType.containsKey(inputFile?.path?.split(".").last));
+  } while(!app_constants.extension2MimeType.containsKey(inputFile.path?.split(".").last));
   return inputFile;
 }
 
