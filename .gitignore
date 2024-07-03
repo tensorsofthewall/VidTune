@@ -168,3 +168,5 @@ cython_debug/
 *.png
 *.jpg
 *.mp3
+*.wav
+*.pkl
