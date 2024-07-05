@@ -1,29 +1,54 @@
 {
-  "project_info": {
-    "project_number": "180711058554",
-    "project_id": "vibematch-6ddcd",
-    "storage_bucket": "vibematch-6ddcd.appspot.com"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:180711058554:android:0956b1b9091274cda4dfc3",
-        "android_client_info": {
-          "package_name": "com.vibematch.app"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
+    "project_info": {
+        "project_number": "180711058554",
+        "project_id": "vibematch-6ddcd",
+        "storage_bucket": "vibematch-6ddcd.appspot.com"
+    },
+    "client": [
         {
-          "current_key": "AIzaSyC91ikMcoRCLjOfaystIXTm1F_fyvkCKTc"
+            "client_info": {
+                "mobilesdk_app_id": "1:180711058554:android:0956b1b9091274cda4dfc3",
+                "android_client_info": {
+                    "package_name": "com.vibematch.app"
+                }
+            },
+            "oauth_client": [
+                {
+                    "client_id": "180711058554-nf3mevimmd4e6s00cpavgi65l3n0dtko.apps.googleusercontent.com",
+                    "client_type": 1,
+                    "android_info": {
+                        "package_name": "com.vibematch.app",
+                        "certificate_hash": "222591810e32418891c7ab08b2c7c9fec4fe603b"
+                    }
+                },
+                {
+                    "client_id": "180711058554-psjrrdg24067284r5nd36jg0iq7ds3j7.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyC91ikMcoRCLjOfaystIXTm1F_fyvkCKTc"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "180711058554-psjrrdg24067284r5nd36jg0iq7ds3j7.apps.googleusercontent.com",
+                            "client_type": 3
+                        },
+                        {
+                            "client_id": "180711058554-jrq2ktpbeuc9vdvs9lt3lq66ebceaslb.apps.googleusercontent.com",
+                            "client_type": 2,
+                            "ios_info": {
+                                "bundle_id": "com.example.vibematch"
+                            }
+                        }
+                    ]
+                }
+            }
         }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
+    ],
+    "configuration_version": "1"
 }

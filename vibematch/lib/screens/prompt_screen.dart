@@ -1,8 +1,5 @@
 // Requires video_trimmer package, consider using.
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'dart:developer' as developer;
-import 'package:vibematch/functions/prompting.dart' show generateMusic;
 
 import 'package:vibematch/components/DisplayTextFieldWidget.dart';
 

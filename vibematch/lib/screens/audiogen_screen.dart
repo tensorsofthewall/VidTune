@@ -1,7 +1,6 @@
 // Screen for receiving generated audio and displaying controls and stuff.
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'dart:developer' as developer;
 
 
 class AudioGenPage extends StatefulWidget{  

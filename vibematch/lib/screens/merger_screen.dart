@@ -1,7 +1,6 @@
 // Screen for merging different audio channels, user control required here.
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'dart:developer' as developer;
 
 
 class MergerPage extends StatefulWidget{  
