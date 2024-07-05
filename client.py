@@ -30,7 +30,7 @@ def generate_music(server_url, prompts, duration, output_file):
     headers = {"Content-Type": "application/json"}
     data = {"prompts": prompts, "duration": duration}
 
-    response = requests.post(url, json=data, headers=headers)
+    response = requests.get(url, json=data, headers=headers)
 
     if response.status_code == 200:
         with open(output_file, "wb") as f:
