@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
                     });
                   });
                 },
-                child: const Text("Select file")
+                child: const Text("Select File")
               ),
             ),
             Expanded(
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
                       }
                     }
                   },
-                  child: const Text("move ahead heathen")),
+                  child: const Text("Trim Video")),
             ),
           ],
         ),

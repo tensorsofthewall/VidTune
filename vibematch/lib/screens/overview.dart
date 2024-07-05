@@ -54,16 +54,16 @@ class _OverviewPageState extends State<OverviewPage> {
       ),
       body: Row(
         children: <Widget>[
-          Expanded(
-            child: TextButton(
-              onPressed: () {
-                if (kDebugMode) {
-                  developer.log("Goes to prompt screen");
-                }
-              },
-              child: const Text("Custom Music Prompt"),
-            ),
-          ),
+          // Expanded(
+          //   child: TextButton(
+          //     onPressed: () {
+          //       if (kDebugMode) {
+          //         developer.log("Goes to prompt screen");
+          //       }
+          //     },
+          //     child: const Text("Custom Music Prompt"),
+          //   ),
+          // ),
           Expanded(
             child: TextButton(
               onPressed: () {

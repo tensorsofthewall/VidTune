@@ -1,5 +1,6 @@
 // Requires video_trimmer package, consider using.
 import 'dart:developer' as developer;
+import 'dart:math';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:vibematch/functions/prompting.dart';
@@ -114,11 +115,10 @@ class _VideoEditorState extends State<VideoEditorPage> {
                 ElevatedButton(
                   onPressed: () async {
                     await saveTrimAndGetPath(_startValue, _endValue);
-                    promptMLLM(trimFilePath, FirebaseStorage.instance.ref())
-                        .then((mllmResponse) {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return PromptPage(mllmResponse: mllmResponse);
+                    final videoDuration = min(((_endValue-_startValue)/1000).ceil(),30);
+                    promptMLLM(trimFilePath, FirebaseStorage.instance.ref()).then((mllmResponse) {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return PromptPage(mllmResponse: mllmResponse, videoDuration: videoDuration,);
                       }));
                     });
                   },
