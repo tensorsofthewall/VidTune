@@ -48,11 +48,13 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: TextButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return VideoEditorPage(selectedFilePath: selectedFile?.path);
-                    }));
-                    if (kDebugMode) {
-                      developer.log("go to videoEdit");
+                    if (selectedFile != null) {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return VideoEditorPage(selectedFilePath: selectedFile?.path.toString());
+                      }));
+                      if (kDebugMode) {
+                        developer.log("go to videoEdit");
+                      }
                     }
                   },
                   child: const Text("move ahead heathen")),

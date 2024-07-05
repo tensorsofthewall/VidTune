@@ -55,5 +55,9 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
+		<!-- Permission options for storage -->
+		<key>kTCCServiceMediaLibrary</key>
+		<string>Media Library Access</string>
 	</dict>
 </plist>

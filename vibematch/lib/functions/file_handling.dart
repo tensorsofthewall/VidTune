@@ -5,12 +5,13 @@ import 'package:firebase_vertexai/firebase_vertexai.dart';
 import 'dart:io' show File;
 import 'package:vibematch/assets/constants.dart' as app_constants;
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path/path.dart' show basename;
 
 // Method to select files
 Future<PlatformFile?> selectFile() async {
   PlatformFile? inputFile;
   do {
-    FilePickerResult? selected = await FilePicker.platform.pickFiles(type: FileType.any, allowedExtensions: null, allowMultiple: false, allowCompression: true);
+    FilePickerResult? selected = await FilePicker.platform.pickFiles(type: FileType.video, allowedExtensions: null, allowMultiple: false, allowCompression: true);
 
     if (selected == null) return null ;
     inputFile = selected.files.first;
@@ -19,15 +20,15 @@ Future<PlatformFile?> selectFile() async {
 }
 
 // Method to upload media to Firebase storage
-Future<FileData> uploadMedia(PlatformFile file, Reference storage) async{
-  final fileForFirebase = File(file.path??"");
-  final fileRef = storage.child(file.name);
+Future<FileData> uploadMedia(String filePath, Reference storage) async{
+  final fileForFirebase = File(filePath);
+  final fileRef = storage.child(basename(filePath));
 
-  final information = await FFprobeKit.getMediaInformation(file.path??"");
+  final information = await FFprobeKit.getMediaInformation(filePath);
   final uploadTask = fileRef.putFile(
     fileForFirebase, 
     SettableMetadata(
-      contentType: app_constants.extension2MimeType[file.path?.split(".").last],
+      contentType: app_constants.extension2MimeType[filePath.split(".").last],
       customMetadata:  {'videoDuration': (await information.getDuration()).toString()}
     ));
 

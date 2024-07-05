@@ -19,6 +19,8 @@ dependencies:
   google_fonts: ^6.2.1
   google_sign_in: ^6.2.1
   http: ^1.2.1
+  path: ^1.9.0
+  permission_handler: ^11.3.1
   video_trimmer: ^3.0.1
 
 dev_dependencies:
