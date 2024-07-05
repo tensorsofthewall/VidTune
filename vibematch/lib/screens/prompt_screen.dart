@@ -17,16 +17,22 @@ class PromptPage extends StatefulWidget{
 
 class _PromptState extends State<PromptPage> {
   // TODO: add State variables
-  late bool _isEditable;
-  late DisplayTextFieldWidget promptTextField;
-  late DisplayTextFieldWidget contentDescriptionField;
+  late bool _isReadOnly;
+  late String promptText;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _isEditable = true;
+    _isReadOnly = false;
+    promptText = widget.mllmResponse['Music Prompt'];
   }
+
+  void updatePromptText(String? updatedText) {
+    setState(() {
+      promptText = updatedText.toString();
+    });
+  } 
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +48,14 @@ class _PromptState extends State<PromptPage> {
           runSpacing: 4.0,
           children: <Widget>[
             Center(
-              child: DisplayTextFieldWidget(initialText: widget.mllmResponse['Content Description']),
+              child: DisplayTextFieldWidget(initialText: widget.mllmResponse['Content Description'], isReadOnly: true,),
             ),
             Center(
-              child: DisplayTextFieldWidget(initialText: widget.mllmResponse['Music Prompt'], isEditable: _isEditable,)
+              child: DisplayTextFieldWidget(initialText: widget.mllmResponse['Music Prompt'], isReadOnly: _isReadOnly, onEdit: updatePromptText,)
             ),
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  generateMusic([])
                 },
                 child: const Text("Generate Music"),
               ),

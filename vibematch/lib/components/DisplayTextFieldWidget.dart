@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 class DisplayTextFieldWidget extends StatefulWidget {
   final String initialText;
-  final bool isEditable;
-  const DisplayTextFieldWidget({super.key, required this.initialText, this.isEditable = false});
-  
-
+  final bool isReadOnly;
+  final Function(String)? onEdit;
+  const DisplayTextFieldWidget({super.key, required this.initialText, this.isReadOnly = true, this.onEdit});
   // void toggleEditable() {
   //   isEditable = !isEditable;
   // }
@@ -15,20 +14,20 @@ class DisplayTextFieldWidget extends StatefulWidget {
 }
 
 class _DisplayTextFieldWidgetState extends State<DisplayTextFieldWidget> {
-  late bool _isEditable;
-
+  late bool _isReadOnly;
   late TextEditingController _controller;
+  // late Function(String?) _onEdit;
 
   @override
   void initState() {
     super.initState();
-    _isEditable = widget.isEditable;
+    _isReadOnly = widget.isReadOnly;
     _controller = TextEditingController(text: widget.initialText);
   }
 
   void toggleEditable() {
     setState(() {
-      _isEditable = !_isEditable;
+      _isReadOnly = !_isReadOnly;
     });
   }
 
@@ -45,9 +44,15 @@ class _DisplayTextFieldWidgetState extends State<DisplayTextFieldWidget> {
       padding: const EdgeInsets.all(10.0),
       child: TextField(
         controller: _controller,
-        enabled: _isEditable,
+        readOnly: _isReadOnly,
         maxLines: null,
         decoration: const InputDecoration(border: OutlineInputBorder()),
+        onChanged: (value) {
+          if (widget.onEdit != null) {
+            widget.onEdit!(value);
+          }
+        },
+
       ),
     );
   }
