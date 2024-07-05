@@ -1,6 +1,6 @@
 // Methods for handling MusicGen calls (hosted on zeroTier as of v0.1.0)
 import 'dart:async';
-import 'dart:convert' show jsonEncode, jsonDecode, utf8;
+import 'dart:convert' show jsonEncode, jsonDecode;
 import 'dart:io' show File;
 import 'dart:typed_data';
 import 'package:firebase_vertexai/firebase_vertexai.dart';
@@ -9,8 +9,8 @@ import 'package:vibematch/assets/constants.dart' as app_constants;
 import 'package:vibematch/functions/file_handling.dart' show uploadMedia;
 import 'package:firebase_storage/firebase_storage.dart' show Reference;
 import 'package:path/path.dart' as path;
-import 'package:zerotier_sockets/zerotier_sockets.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:zerotier_sockets/zerotier_sockets.dart';
+// import 'package:path_provider/path_provider.dart';
 
 
 

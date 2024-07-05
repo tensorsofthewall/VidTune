@@ -41,7 +41,6 @@ class _OverviewPageState extends State<OverviewPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     // _requestPermissions();
   }

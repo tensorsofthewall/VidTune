@@ -17,7 +17,6 @@ class VideoEditorPage extends StatefulWidget {
 }
 
 class _VideoEditorState extends State<VideoEditorPage> {
-  // TODO: add State variables
   final Trimmer _trimmer = Trimmer();
   late String trimFilePath;
 
@@ -28,7 +27,6 @@ class _VideoEditorState extends State<VideoEditorPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _loadVideo();
     trimFilePath = "";
@@ -58,12 +56,11 @@ class _VideoEditorState extends State<VideoEditorPage> {
     setState(() {
       trimFilePath = filepath.toString();
     });
-    print("Filepath: ${trimFilePath.toString()}");
+    // print("Filepath: ${trimFilePath.toString()}");
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
       appBar: AppBar(title: const Text("Video Editor")),
       body: SingleChildScrollView(

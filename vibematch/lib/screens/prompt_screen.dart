@@ -1,10 +1,8 @@
 // Requires video_trimmer package, consider using.
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'dart:developer' as developer;
-import 'package:vibematch/functions/prompting.dart' show generateMusic, generateMusicZT;
+import 'package:vibematch/functions/prompting.dart' show generateMusic; //generateMusicZT
 
 import 'package:vibematch/components/DisplayTextFieldWidget.dart';
 import 'package:vibematch/screens/audiogen_screen.dart';
@@ -20,13 +18,11 @@ class PromptPage extends StatefulWidget{
 }
 
 class _PromptState extends State<PromptPage> {
-  // TODO: add State variables
   late bool _isReadOnly;
   late String promptText;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _isReadOnly = false;
     promptText = widget.mllmResponse['Music Prompt'];
@@ -40,7 +36,6 @@ class _PromptState extends State<PromptPage> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
       appBar: AppBar(
         title: const Text("Content Description | Prompt")
@@ -51,9 +46,11 @@ class _PromptState extends State<PromptPage> {
           spacing: 8.0,
           runSpacing: 4.0,
           children: <Widget>[
+            const Text("Video Description"),
             Center(
               child: DisplayTextFieldWidget(initialText: widget.mllmResponse['Content Description'], isReadOnly: true,),
             ),
+            const Text("Music Prompt/Description"),
             Center(
               child: DisplayTextFieldWidget(initialText: widget.mllmResponse['Music Prompt'], isReadOnly: _isReadOnly, onEdit: updatePromptText,)
             ),

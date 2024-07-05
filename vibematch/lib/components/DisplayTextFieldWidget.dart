@@ -39,7 +39,6 @@ class _DisplayTextFieldWidgetState extends State<DisplayTextFieldWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: TextField(

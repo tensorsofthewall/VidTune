@@ -1,9 +1,7 @@
 // Screen for receiving generated audio and displaying controls and stuff.
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'dart:developer' as developer;
 import 'package:http/http.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -20,7 +18,7 @@ class _AudioGenState extends State<AudioGenPage> {
   // TODO: add State variables
   List<AudioPlayer> audioPlayerList = [];
   List<Uint8List> audioBytesList = [];
-  List<bool> _isPlayingList = [false,false, false];
+  final List<bool> _isPlayingList = [false,false, false];
 
 
   @override
@@ -72,7 +70,7 @@ class _AudioGenState extends State<AudioGenPage> {
         child: Center(child: Column(
           children: <Widget>[
             Padding(
-              padding: EdgeInsets.only(left: 8.0, right:8.0, top:10.0, bottom: 8.0),
+              padding: const EdgeInsets.only(left: 8.0, right:8.0, top:10.0, bottom: 8.0),
               child: IconButton(
                 iconSize: 48.0,
                 onPressed: () {
@@ -81,9 +79,9 @@ class _AudioGenState extends State<AudioGenPage> {
                 icon: Icon(_isPlayingList[0] ? Icons.pause : Icons.play_arrow)
               ),
             ),
-            Text("Sample 1"),
+            const Text("Sample 1"),
             Padding(
-              padding: EdgeInsets.only(left: 8.0, right:8.0, top:8.0, bottom: 8.0),
+              padding: const EdgeInsets.only(left: 8.0, right:8.0, top:8.0, bottom: 8.0),
               child: IconButton(
                 iconSize: 48.0,
                 onPressed: () {
@@ -92,9 +90,9 @@ class _AudioGenState extends State<AudioGenPage> {
                 icon: Icon(_isPlayingList[1] ? Icons.pause : Icons.play_arrow)
               ),
             ),
-            Text("Sample 2"),
+            const Text("Sample 2"),
             Padding(
-              padding: EdgeInsets.only(left: 8.0, right:8.0, top:8.0, bottom: 10.0),
+              padding: const EdgeInsets.only(left: 8.0, right:8.0, top:8.0, bottom: 10.0),
               child: IconButton(
                 iconSize: 48.0,
                 onPressed: () {
@@ -103,7 +101,7 @@ class _AudioGenState extends State<AudioGenPage> {
                 icon: Icon(_isPlayingList[2] ? Icons.pause : Icons.play_arrow)
               ),
             ),
-            Text("Sample 3"),
+            const Text("Sample 3"),
           ],
         ),
         ),
