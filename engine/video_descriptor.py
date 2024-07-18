@@ -1,8 +1,7 @@
+import os
 from warnings import simplefilter
 
 simplefilter("ignore")
-import os
-
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import json
 import time
@@ -77,6 +76,9 @@ class DescribeVideo:
         logging.info(f"Generated : {video_path} with response: {cleaned_response.text}")
 
         return json.loads(cleaned_response.text.strip("```json\n"))
+
+    def __call__(self, video_path):
+        return self.describe_video(video_path)
 
     def reset_safety_settings(self):
         logging.info("Resetting safety settings")
