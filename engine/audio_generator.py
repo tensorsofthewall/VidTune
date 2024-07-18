@@ -114,7 +114,14 @@ class GenerateAudio:
 
 if __name__ == "__main__":
     audio_gen = GenerateAudio()
-    sample_rate, result = audio_gen.generate_audio(["A piano playing a jazz melody", "A guitar playing a rock riff", "A LoFi music for coding"], duration=10)
+    sample_rate, result = audio_gen.generate_audio(
+        [
+            "A piano playing a jazz melody", 
+            "A guitar playing a rock riff", 
+            "A LoFi music for coding"
+        ], 
+        duration=10
+    )
     paths = audio_gen.save_audio()
     print(f"Saved audio to: {paths}")
     buffers = audio_gen.get_audio_buffer()
