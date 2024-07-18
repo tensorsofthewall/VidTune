@@ -3,6 +3,7 @@ import warnings
 
 warnings.simplefilter("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+import io
 import torch
 import numpy as np
 from audiocraft.models import musicgen
@@ -19,6 +20,8 @@ class GenerateAudio:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = self.get_model_name(model)
         self.model = self.get_model(self.model_name, self.device)
+        self.generated_audio = None
+        self.sampling_rate = None
 
     @staticmethod
     def get_model(model, device):
@@ -36,127 +39,83 @@ class GenerateAudio:
         if model_name.startswith("facebook/"):
             return model_name
         return f"facebook/{model_name}"
+    
+    @staticmethod
+    def duration_sanity_check(duration):
+        if duration < 1:
+            logging.warning("Duration is less than 1 second. Setting duration to 1 second.")
+            return 1
+        elif duration > 30:
+            logging.warning("Duration is greater than 30 seconds. Setting duration to 30 seconds.")
+            return 30
+        return duration
 
-    def generate_audio(self, prompts, duration=30):
+    @staticmethod
+    def prompts_sanity_check(prompts):
+        if isinstance(prompts, str):
+            prompts = [prompts]
+        elif not isinstance(prompts, list):
+            raise ValueError("Prompts should be a string or a list of strings.")
+        else:
+            for prompt in prompts:
+                if not isinstance(prompt, str):
+                    raise ValueError("Prompts should be a string or a list of strings.")
+            if len(prompts) > 8: # Too many prompts will cause OOM error
+                raise ValueError("Maximum number of prompts allowed is 8.")
+        return prompts
+    
+
+    def generate_audio(self, prompts, duration=10):
+        duration = self.duration_sanity_check(duration)
+        prompts = self.prompts_sanity_check(prompts)
+
         try:
             self.model.set_generation_params(duration=duration)
             result = self.model.generate(prompts, progress=False)
-            result = result.squeeze().cpu().numpy().T
-            sample_rate = self.model.sample_rate
+            self.result = result.cpu().numpy().T
+            self.result = self.result.transpose((2, 0, 1))
+            self.sampling_rate = self.model.sample_rate
             logging.info(
-                f"Generated audio with shape: {result.shape}, sample rate: {sample_rate} Hz"
+                f"Generated audio with shape: {self.result.shape}, sample rate: {self.sampling_rate} Hz"
             )
-            return sample_rate, result
+            print(f"Generated audio with shape: {self.result.shape}, sample rate: {self.sampling_rate} Hz")
+            return self.sampling_rate, self.result
         except Exception as e:
             logging.error(f"Failed to generate audio: {e}")
             raise ValueError(f"Failed to generate audio: {e}")
-    
 
+    def save_audio(self, audio_dir="generated_audio"):
+        if self.result is None:
+            raise ValueError("Audio is not generated yet.")
+        if self.sampling_rate is None:
+            raise ValueError("Sampling rate is not available.")
 
+        paths = []
+        os.makedirs(audio_dir, exist_ok=True)
+        for i, audio in enumerate(self.result):
+            path = os.path.join(audio_dir, f"audio_{i}.wav")
+            wav_write(path, self.sampling_rate, audio)
+            paths.append(path)
+        return paths
 
-# Parse command line arguments
-parser = argparse.ArgumentParser(description="Music Generation Server")
-parser.add_argument(
-    "--model", type=str, default="musicgen-stereo-small", help="Pretrained model name"
-)
-parser.add_argument(
-    "--device", type=str, default="cuda", help="Device to load the model on"
-)
-parser.add_argument(
-    "--duration", type=int, default=10, help="Duration of generated music in seconds"
-)
-parser.add_argument(
-    "--host", type=str, default="0.0.0.0", help="Host to run the server on"
-)
-parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
+    def get_audio_buffer(self):
+        if self.result is None:
+            raise ValueError("Audio is not generated yet.")
+        if self.sampling_rate is None:
+            raise ValueError("Sampling rate is not available.")
 
-args = parser.parse_args()
-
-
-# Initialize the FastAPI app
-app = FastAPI()
-
-# Build the model name based on the provided arguments
-if args.model.startswith("facebook/"):
-    args.model_name = args.model
-else:
-    args.model_name = f"facebook/{args.model}"
-
-
-logging.info(f"Initializing Model Server with Settings: {args}")
-
-# Load the model with the provided arguments
-try:
-    musicgen_model = musicgen.MusicGen.get_pretrained(
-        args.model_name, device=args.device
-    )
-    model_loaded = True
-    logging.info(f"Model Loaded: {args.model_name}")
-except Exception as e:
-    logging.error(f"Failed to load model: {e}")
-    musicgen_model = None
-    model_loaded = False
-
-
-class MusicRequest(BaseModel):
-    prompts: List[str]
-    duration: Optional[int] = 10  # Default duration is 10 seconds if not provided
-
-
-@app.get("/generate_music")
-def generate_music(request: MusicRequest):
-
-    if not model_loaded:
-        raise HTTPException(status_code=500, detail="Model is not loaded.")
-
-    try:
-        logging.info(
-            f"Generating music with prompts: {request.prompts}, duration: {request.duration} seconds"
-        )
-
-        musicgen_model.set_generation_params(duration=request.duration)
-        result = musicgen_model.generate(request.prompts, progress=False)
-        result = result.squeeze().cpu().numpy().T
-
-        sample_rate = musicgen_model.sample_rate
-
-        logging.info(
-            f"Music generated with shape: {result.shape}, sample rate: {sample_rate} Hz"
-        )
-
-        buffer = io.BytesIO()
-        wav_write(buffer, sample_rate, result)
-        buffer.seek(0)
-        return StreamingResponse(buffer, media_type="audio/wav")
-    except Exception as e:
-        logging.error(f"Failed to generate music: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/health")
-def health_check():
-    cpu_usage = psutil.cpu_percent(interval=1)
-    ram_usage = psutil.virtual_memory().percent
-    stats = {
-        "server_running": True,
-        "model_loaded": model_loaded,
-        "cpu_usage_percent": cpu_usage,
-        "ram_usage_percent": ram_usage,
-    }
-    if args.device == "cuda" and torch.cuda.is_available():
-        gpu_memory_allocated = memory_allocated()
-        gpu_memory_reserved = memory_reserved()
-        stats.update(
-            {
-                "gpu_memory_allocated": gpu_memory_allocated,
-                "gpu_memory_reserved": gpu_memory_reserved,
-            }
-        )
-
-    logging.info(f"Health Check: {stats}")
-
-    return JSONResponse(content=stats)
-
+        buffers = []
+        for audio in self.result:
+            buffer = io.BytesIO()
+            wav_write(buffer, self.sampling_rate, audio)
+            buffer.seek(0)
+            buffers.append(buffer)
+        return buffers
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=args.host, port=args.port, reload=False, workers=1)
+    audio_gen = GenerateAudio()
+    sample_rate, result = audio_gen.generate_audio(["A piano playing a jazz melody", "A guitar playing a rock riff", "A LoFi music for coding"], duration=10)
+    paths = audio_gen.save_audio()
+    print(f"Saved audio to: {paths}")
+    buffers = audio_gen.get_audio_buffer()
+    print(f"Audio buffers: {buffers}")
