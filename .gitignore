@@ -168,3 +168,6 @@ cython_debug/
 *.mp4
 
 creds.json
+
+# Ignore the test file
+test.py
