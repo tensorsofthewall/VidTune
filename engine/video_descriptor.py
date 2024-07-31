@@ -15,15 +15,19 @@ except:
 music_prompt_examples = """
 'A dynamic blend of hip-hop and orchestral elements, with sweeping strings and brass, evoking the vibrant energy of the city',
 'Smooth jazz, with a saxophone solo, piano chords, and snare full drums',
-'90s rock song with electric guitar and heavy drums'.
+'90s rock song with electric guitar and heavy drums, nightcore, 140bpm',
+'lofi melody loop, A minor, 110 bpm, jazzy chords evoking a feeling of curiosity, relaxing, vinyl recording',
+'J-Pop, 140bpm, 320kbps, 48kHz',
+'funk, disco, R&B, AOR, soft rock, and boogie',
+'a light and cheerly EDM track, with syncopated drums, aery pads, and strong emotions bpm: 130'.
 """
 
 json_schema = """
 {"Content Description": "string", "Music Prompt": "string"}
 """
 
-gemni_instructions = f"""
-You are a music supervisor who analyzes the content and tone of images and videos to describe music that fits well with the mood, evokes emotions, and enhances the narrative of the visuals. Given an image or video, describe the scene and generate a prompt suitable for music generation models. Use keywords related to genre, instruments, mood, context, and setting to craft a concise single-sentence prompt, like:
+gemini_instructions = f"""
+You are a music supervisor who analyzes the content and tone of images and videos to describe music that fits well with the mood, evokes emotions, and enhances the narrative of the visuals. Given an image or video, describe the scene and generate a prompt suitable for music generation models. Generate a music prompt based on the description, and use keywords if provided by the user:
 
 {music_prompt_examples}
 
@@ -39,7 +43,7 @@ class DescribeVideo:
         self.safety_settings = self.get_safety_settings()
 
         genai.configure(api_key=__api_key)
-        self.mllm_model = genai.GenerativeModel(self.model)
+        self.mllm_model = genai.GenerativeModel(self.model, system_instruction=gemini_instructions)
 
         logging.info(f"Initialized DescribeVideo with model: {self.model}")
 
@@ -61,21 +65,9 @@ class DescribeVideo:
             safety_settings=self.safety_settings,
         )
 
-        logging.info(
-            f"Generated content for video: {video_path} with response: {response.text}"
-        )
+        logging.info(f"Generated : {video_path} with response: {response.text}")
 
-        cleaned_response = self.mllm_model.generate_content(
-            [
-                response.text,
-                gemni_instructions,
-            ],
-            safety_settings=self.safety_settings,
-        )
-
-        logging.info(f"Generated : {video_path} with response: {cleaned_response.text}")
-
-        return json.loads(cleaned_response.text.strip("```json\n"))
+        return json.loads(response.text.strip("```json\n"))
 
     def __call__(self, video_path):
         return self.describe_video(video_path)
