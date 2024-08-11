@@ -83,9 +83,30 @@ if "orig_audio_vol" not in st.session_state:
     st.session_state.orig_audio_vol = 100
 if "generated_audio_vol" not in st.session_state:
     st.session_state.generated_audio_vol = 100
+if "generate_button_flag" not in st.session_state:
+    st.session_state.generate_button_flag = False
+if "video_description_content" not in st.session_state:
+    st.session_state.video_description_content = ""
+if "music_prompt" not in st.session_state:
+    st.session_state.music_prompt = ""
+if "audio_mix_flag" not in st.session_state:
+    st.session_state.audio_mix_flag = False
+if "google_api_key" not in st.session_state:
+    st.session_state.google_api_key = ""
 
 # Sidebar
-st.sidebar.title("Settings")
+st.sidebar.title("Configuration")
+
+# Google API Key
+st.session_state.google_api_key = st.sidebar.text_input(
+    "Enter your Google API Key to get started:",
+    st.session_state.google_api_key,
+    type="password",
+)
+
+if not st.session_state.google_api_key:
+    st.warning("Please enter your Google API Key to proceed.")
+    st.stop()
 
 # Basic Settings
 st.session_state.video_model = st.sidebar.selectbox(
@@ -141,15 +162,19 @@ generate_button = st.sidebar.button("Generate Music")
 
 # Cache the model loading
 @st.cache_resource
-def load_models(video_model_key, music_model_key):
-    video_descriptor = DescribeVideo(model=video_model_map[video_model_key])
+def load_models(video_model_key, music_model_key, google_api_key):
+    video_descriptor = DescribeVideo(
+        model=video_model_map[video_model_key], google_api_key=google_api_key
+    )
     audio_generator = GenerateAudio(model=music_model_map[music_model_key])
     return video_descriptor, audio_generator
 
 
 # Load models
 video_descriptor, audio_generator = load_models(
-    st.session_state.video_model, st.session_state.music_model
+    st.session_state.video_model,
+    st.session_state.music_model,
+    st.session_state.google_api_key,
 )
 
 # Video Uploader
@@ -177,31 +202,37 @@ if generate_button:
             user_keywords=st.session_state.user_keywords,
         )
         video_duration = VideoFileClip(f"{user_session_id}/temp.mp4").duration
-        music_prompt = video_description["Music Prompt"]
+        st.session_state.video_description_content = video_description[
+            "Content Description"
+        ]
+        st.session_state.music_prompt = video_description["Music Prompt"]
 
         st.success("Video description generated successfully.")
+        st.session_state.generate_button_flag = True
 
-        # Display Video Description and Music Prompt
-        st.text_area(
-            "Video Description",
-            video_description["Content Description"],
-            disabled=True,
-            height=120,
-        )
-        music_prompt = st.text_area(
-            "Music Prompt",
-            music_prompt,
-            disabled=True,
-            height=120,
-        )
+# Display Video Description and Music Prompt
+if st.session_state.generate_button_flag:
+    st.text_area(
+        "Video Description",
+        st.session_state.video_description_content,
+        disabled=True,
+        height=120,
+    )
+    music_prompt = st.text_area(
+        "Music Prompt",
+        st.session_state.music_prompt,
+        disabled=True,
+        height=120,
+    )
 
+if generate_button:
     # Generate Music
     with st.spinner("Generating music..."):
         if video_duration > 30:
             st.warning(
                 "Due to hardware limitations, the maximum music length is capped at 30 seconds."
             )
-        music_prompt = [music_prompt] * st.session_state.num_samples
+        music_prompt = [st.session_state.music_prompt] * st.session_state.num_samples
         audio_generator.generate_audio(music_prompt, duration=video_duration)
         st.session_state.audio_paths = audio_generator.save_audio()
         st.success("Music generated successfully.")
@@ -210,6 +241,7 @@ if generate_button:
 
 # Callback function for radio button selection change
 def on_audio_selection_change():
+    st.session_state.audio_mix_flag = False
     selected_audio_index = st.session_state.selected_audio
     if selected_audio_index > 0:
         st.session_state.selected_audio_path = st.session_state.audio_paths[
@@ -235,14 +267,15 @@ if st.session_state.audio_paths:
         format_func=lambda x: audio_options[x],
         index=0,
         key="selected_audio",
+        on_change=on_audio_selection_change,
     )
 
     # Button to confirm the selection
     if st.button("Add Generated Music to Video"):
-        on_audio_selection_change()
+        st.session_state.audio_mix_flag = True
 
 # Handle Audio Mixing and Export
-if st.session_state.selected_audio_path is not None:
+if st.session_state.selected_audio_path is not None and st.session_state.audio_mix_flag:
     with st.spinner("Mixing Audio..."):
         orig_clip = VideoFileClip(f"{user_session_id}/temp.mp4")
         orig_clip_audio = orig_clip.audio
