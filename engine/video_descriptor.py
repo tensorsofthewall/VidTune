@@ -47,7 +47,7 @@ class DescribeVideo:
 
         logging.info(f"Initialized DescribeVideo with model: {self.model}")
 
-    def describe_video(self, video_path):
+    def describe_video(self, video_path, genre, bpm, user_keywords):
         video_file = genai.upload_file(video_path)
         logging.info(f"Uploaded video: {video_path}")
 
@@ -58,9 +58,11 @@ class DescribeVideo:
         if video_file.state.name == "FAILED":
             logging.error(f"Failed to upload video: {video_file.state.name}")
             raise ValueError(f"Failed to upload video: {video_file.state.name}")
+        
+        additional_keywords = ", ".join([genre, user_keywords, bpm]) + "bpm"
 
         response = self.mllm_model.generate_content(
-            [video_file, "Explain what is happening in this video"],
+            [video_file, f"Explain what is happening in this video. The following keywords are provided by the user for generating the music prompt: {additional_keywords}"],
             request_options={"timeout": 600},
             safety_settings=self.safety_settings,
         )

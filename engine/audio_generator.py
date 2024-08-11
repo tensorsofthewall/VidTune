@@ -70,8 +70,14 @@ class GenerateAudio:
         prompts = self.prompts_sanity_check(prompts)
 
         try:
-            self.model.set_generation_params(duration=duration)
-            result = self.model.generate(prompts, progress=False)
+            if duration <= 30:
+                self.model.set_generation_params(duration=duration)
+                result = self.model.generate(prompts, progress=False)
+            elif duration > 30:
+                self.model.set_generation_params(duration=30)
+                result = self.model.generate(prompts, progress=False)
+                self.model.set_generation_params(duration=duration)
+                result = self.model.generate_with_chroma(prompts, result, melody_sample_rate=self.sampling_rate, progress=False)
             self.result = result.cpu().numpy().T
             self.result = self.result.transpose((2, 0, 1))
             self.sampling_rate = self.model.sample_rate
