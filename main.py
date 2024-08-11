@@ -3,7 +3,15 @@ from engine import DescribeVideo, GenerateAudio
 import os
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 from moviepy.audio.fx.volumex import volumex
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
+def get_session_id():
+    session_id = get_script_run_ctx().session_id
+    session_id = session_id.replace('-','_')
+    session_id = '_id_' + session_id
+    return session_id
+
+print(get_session_id())
 # Define model maps
 video_model_map = {
     "Fast": "flash",
