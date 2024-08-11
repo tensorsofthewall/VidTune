@@ -1,5 +1,6 @@
 import os
 import warnings
+import traceback
 
 warnings.simplefilter("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -30,7 +31,9 @@ class GenerateAudio:
             logging.info(f"Loaded model: {model}")
             return model
         except Exception as e:
-            logging.error(f"Failed to load model: {e}")
+            logging.error(
+                f"Failed to load model: {e}, Traceback: {traceback.format_exc()}"
+            )
             raise ValueError(f"Failed to load model: {e}")
             return
 
@@ -39,14 +42,18 @@ class GenerateAudio:
         if model_name.startswith("facebook/"):
             return model_name
         return f"facebook/{model_name}"
-    
+
     @staticmethod
     def duration_sanity_check(duration):
         if duration < 1:
-            logging.warning("Duration is less than 1 second. Setting duration to 1 second.")
+            logging.warning(
+                "Duration is less than 1 second. Setting duration to 1 second."
+            )
             return 1
         elif duration > 30:
-            logging.warning("Duration is greater than 30 seconds. Setting duration to 30 seconds.")
+            logging.warning(
+                "Duration is greater than 30 seconds. Setting duration to 30 seconds."
+            )
             return 30
         return duration
 
@@ -60,16 +67,16 @@ class GenerateAudio:
             for prompt in prompts:
                 if not isinstance(prompt, str):
                     raise ValueError("Prompts should be a string or a list of strings.")
-            if len(prompts) > 8: # Too many prompts will cause OOM error
+            if len(prompts) > 8:  # Too many prompts will cause OOM error
                 raise ValueError("Maximum number of prompts allowed is 8.")
         return prompts
-    
 
     def generate_audio(self, prompts, duration=10):
         duration = self.duration_sanity_check(duration)
         prompts = self.prompts_sanity_check(prompts)
 
         try:
+            self.sampling_rate = self.model.sample_rate
             if duration <= 30:
                 self.model.set_generation_params(duration=duration)
                 result = self.model.generate(prompts, progress=False)
@@ -77,17 +84,23 @@ class GenerateAudio:
                 self.model.set_generation_params(duration=30)
                 result = self.model.generate(prompts, progress=False)
                 self.model.set_generation_params(duration=duration)
-                result = self.model.generate_with_chroma(prompts, result, melody_sample_rate=self.sampling_rate, progress=False)
+                result = self.model.generate_with_chroma(
+                    prompts,
+                    result,
+                    melody_sample_rate=self.sampling_rate,
+                    progress=False,
+                )
             self.result = result.cpu().numpy().T
             self.result = self.result.transpose((2, 0, 1))
-            self.sampling_rate = self.model.sample_rate
+
             logging.info(
                 f"Generated audio with shape: {self.result.shape}, sample rate: {self.sampling_rate} Hz"
             )
-            print(f"Generated audio with shape: {self.result.shape}, sample rate: {self.sampling_rate} Hz")
             return self.sampling_rate, self.result
         except Exception as e:
-            logging.error(f"Failed to generate audio: {e}")
+            logging.error(
+                f"Failed to generate audio: {e}, Traceback: {traceback.format_exc()}"
+            )
             raise ValueError(f"Failed to generate audio: {e}")
 
     def save_audio(self, audio_dir="generated_audio"):
@@ -118,15 +131,16 @@ class GenerateAudio:
             buffers.append(buffer)
         return buffers
 
+
 if __name__ == "__main__":
     audio_gen = GenerateAudio()
     sample_rate, result = audio_gen.generate_audio(
         [
-            "A piano playing a jazz melody", 
-            "A guitar playing a rock riff", 
-            "A LoFi music for coding"
-        ], 
-        duration=10
+            "A piano playing a jazz melody",
+            "A guitar playing a rock riff",
+            "A LoFi music for coding",
+        ],
+        duration=10,
     )
     paths = audio_gen.save_audio()
     print(f"Saved audio to: {paths}")

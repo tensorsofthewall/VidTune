@@ -1,5 +1,6 @@
 import os
 from warnings import simplefilter
+import traceback
 
 simplefilter("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -43,26 +44,38 @@ class DescribeVideo:
         self.safety_settings = self.get_safety_settings()
 
         genai.configure(api_key=__api_key)
-        self.mllm_model = genai.GenerativeModel(self.model, system_instruction=gemini_instructions)
+        self.mllm_model = genai.GenerativeModel(
+            self.model, system_instruction=gemini_instructions
+        )
 
         logging.info(f"Initialized DescribeVideo with model: {self.model}")
 
     def describe_video(self, video_path, genre, bpm, user_keywords):
         video_file = genai.upload_file(video_path)
-        logging.info(f"Uploaded video: {video_path}")
 
         while video_file.state.name == "PROCESSING":
             time.sleep(0.25)
             video_file = genai.get_file(video_file.name)
 
         if video_file.state.name == "FAILED":
-            logging.error(f"Failed to upload video: {video_file.state.name}")
+            logging.error(
+                f"Failed to upload video: {video_file.state.name}, Traceback: {traceback.format_exc()}"
+            )
             raise ValueError(f"Failed to upload video: {video_file.state.name}")
-        
-        additional_keywords = ", ".join([genre, user_keywords, bpm]) + "bpm"
+
+        additional_keywords = ", ".join(filter(None, [genre, user_keywords])) + (
+            f", {bpm} bpm" if bpm else ""
+        )
+
+        logging.info(f"Uploaded video: {video_path} and config: {additional_keywords}")
+
+        user_prompt = "Explain what is happening in this video."
+
+        if additional_keywords:
+            user_prompt += f" The following keywords are provided by the user for generating the music prompt: {additional_keywords}"
 
         response = self.mllm_model.generate_content(
-            [video_file, f"Explain what is happening in this video. The following keywords are provided by the user for generating the music prompt: {additional_keywords}"],
+            [video_file, user_prompt],
             request_options={"timeout": 600},
             safety_settings=self.safety_settings,
         )
@@ -116,7 +129,9 @@ class DescribeVideo:
 
         api_key = creds.get("google_api_key", None)
         if api_key is None or not isinstance(api_key, str):
-            logging.error(f"Google API key not found in {path}")
+            logging.error(
+                f"Google API key not found in {path}, Traceback: {traceback.format_exc()}"
+            )
             raise ValueError(f"Gemini API key not found in {path}")
         return api_key
 
@@ -129,7 +144,7 @@ class DescribeVideo:
 
         if model not in models:
             logging.error(
-                f"Invalid model name '{model}'. Valid options are: {', '.join(models.keys())}"
+                f"Invalid model name '{model}'. Valid options are: {', '.join(models.keys())}, Traceback: {traceback.format_exc()}"
             )
             raise ValueError(
                 f"Invalid model name '{model}'. Valid options are: {', '.join(models.keys())}"
