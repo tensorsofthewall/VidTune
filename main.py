@@ -1,7 +1,8 @@
 import streamlit as st
 from engine import DescribeVideo, GenerateAudio
 import os
-from moviepy.editor import VideoFileClip
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
+from moviepy.audio.fx.volumex import volumex
 
 # Define model maps
 video_model_map = {
@@ -35,6 +36,7 @@ genre_map = {
     "Lo-Fi": "Lo-Fi",
 }
 
+# Streamlit page configuration
 st.set_page_config(
     page_title="VidTune: Where Videos Find Their Melody", layout="centered"
 )
@@ -60,7 +62,17 @@ if "music_bpm" not in st.session_state:
     st.session_state.music_bpm = 100
 if "user_keywords" not in st.session_state:
     st.session_state.user_keywords = None
-
+if "selected_audio" not in st.session_state:
+    st.session_state.selected_audio = "None"
+if "audio_paths" not in st.session_state:
+    st.session_state.audio_paths = []
+if "selected_audio_path" not in st.session_state:
+    st.session_state.selected_audio_path = None
+if "orig_audio_vol" not in st.session_state:
+    st.session_state.orig_audio_vol = 100
+if "generated_audio_vol" not in st.session_state:
+    st.session_state.generated_audio_vol = 100
+    
 # Sidebar
 st.sidebar.title("Settings")
 
@@ -141,12 +153,11 @@ if os.path.exists("temp.mp4") and uploaded_video is not None:
     st.video(uploaded_video)
 
 # Submit button if video is not uploaded
-if generate_button and uploaded_video is None:
-    st.error("Please upload a video before generating music.")
-    st.stop()
+if generate_button:
+    if uploaded_video is None:
+        st.error("Please upload a video before generating music.")
+        st.stop()
 
-# Submit Button and music generation if video is uploaded
-if generate_button and uploaded_video is not None:
     with st.spinner("Analyzing video..."):
         video_description = video_descriptor.describe_video(
             "temp.mp4",
@@ -181,9 +192,69 @@ if generate_button and uploaded_video is not None:
             )
         music_prompt = [music_prompt] * st.session_state.num_samples
         audio_generator.generate_audio(music_prompt, duration=video_duration)
-        audio_paths = audio_generator.save_audio()
+        st.session_state.audio_paths = audio_generator.save_audio()
         st.success("Music generated successfully.")
-        for i, audio_path in enumerate(audio_paths):
-            st.audio(audio_path, format="audio/wav")
-
         st.balloons()
+
+# Callback function for radio button selection change
+def on_audio_selection_change():
+    selected_index = audio_options.index(st.session_state.selected_audio) - 1
+    if selected_index >= 0:
+        st.session_state.selected_audio_path = st.session_state.audio_paths[selected_index]
+    else:
+        st.session_state.selected_audio_path = None
+
+# Display radio buttons and handle audio selections
+if st.session_state.audio_paths:
+    for i, audio_path in enumerate(st.session_state.audio_paths):
+        st.audio(audio_path, format="audio/wav")
+    
+    audio_options = ["None"]+[f"Sample {i+1}" for i in range(len(st.session_state.audio_paths))]
+    st.radio(
+        "Select one of the generated audio files for further processing:",
+        audio_options,
+        index=0,
+        key="selected_audio",
+        on_change=on_audio_selection_change
+    )
+    
+    if st.session_state.selected_audio_path:
+        st.write(f"**Selected Audio:** {st.session_state.selected_audio_path}")
+
+# Handle Audio Mixing and Export
+if st.session_state.selected_audio_path is not None:
+    orig_clip = VideoFileClip("temp.mp4")
+    orig_clip_audio = orig_clip.audio
+    generated_audio = AudioFileClip(st.session_state.selected_audio_path)
+    
+    st.session_state.orig_audio_vol = st.slider(
+        "Original Audio Volume", 0, 200, st.session_state.orig_audio_vol
+    )
+    
+    st.session_state.generated_audio_vol = st.slider(
+        "Selected Sample Volume", 0, 200, st.session_state.generated_audio_vol
+    )
+    
+    orig_clip_audio = volumex(orig_clip_audio, float(st.session_state.orig_audio_vol/100))
+    generated_audio = volumex(generated_audio, float(st.session_state.generated_audio_vol/100))
+    
+    orig_clip.audio = CompositeAudioClip([orig_clip_audio, generated_audio])
+    
+    final_video_path="out_tmp.mp4"
+    orig_clip.write_videofile(final_video_path)
+    
+    orig_clip.close()
+    generated_audio.close()
+    
+    st.session_state.final_video_path = final_video_path
+    
+    st.video(final_video_path)
+    
+    if st.session_state.final_video_path:
+        with open(st.session_state.final_video_path, "rb") as video_file:
+            st.download_button(
+                label="Download final video",
+                data=video_file,
+                file_name="final_video.mp4",
+                mime="video/mp4",
+            )
