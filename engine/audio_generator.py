@@ -9,11 +9,13 @@ import numpy as np
 from audiocraft.models import musicgen
 from scipy.io.wavfile import write as wav_write
 
-try:
-    from logger import logging
-except:
-    import logging
+import logging
 
+FORMAT = "%(asctime)s: %(levelname)s: %(message)s"
+logging.basicConfig(filename='logs.log', level=logging.INFO, format=FORMAT)
+STDERRLOGGER = logging.StreamHandler()
+STDERRLOGGER.setFormatter(logging.Formatter(FORMAT))
+logging.getLogger().addHandler(STDERRLOGGER)
 
 class GenerateAudio:
     def __init__(self, model="musicgen-stereo-small"):
@@ -75,6 +77,7 @@ class GenerateAudio:
             self.result = result.cpu().numpy().T
             self.result = self.result.transpose((2, 0, 1))
             self.sampling_rate = self.model.sample_rate
+
             logging.info(
                 f"Generated audio with shape: {self.result.shape}, sample rate: {self.sampling_rate} Hz"
             )
