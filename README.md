@@ -151,6 +151,8 @@ streamlit run main.py
 - [Docker](https://docs.docker.com/engine/install/)
 - [Nvidia Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt)
 
+Docker Hub Image: https://hub.docker.com/r/animikhaich/vidtune
+
 ```
 docker run --rm -it --gpus all -p 8003:8003 animikhaich/vidtune
 ```
