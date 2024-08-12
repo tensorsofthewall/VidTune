@@ -65,6 +65,7 @@
         <li><a href="#hardwarre-used-for-development-and-testing">Hardware used for Development and Testing</a></li>
       </ul>
     </li>
+    <li><a href="#see-vidtune-in-action">See VidTune in action!</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -122,6 +123,10 @@ The above is just used for development and by no means is necessary to run this 
 While VidTune is supported on CPU-only machines, we recommend using a GPU with minimum 16GB of memory for faster results.
 
 
+## See VidTune in action!
+[![Watch the video](https://img.youtube.com/vi/knbQjWZtL3Y/maxresdefault.jpg)](https://youtu.be/knbQjWZtL3Y)
+
+
 <!-- ROADMAP -->
 ## Roadmap
 - [x] Customized Prompt for Gemini Prompting
@@ -161,7 +166,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- LICENSE -->
 ## License
 
-Distributed under the CC BY-NC 4.0 License. See [`LICENSE`](../LICENSE) for more information.
+Distributed under the CC BY-NC 4.0 License. See [`LICENSE`](./LICENSE) for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
