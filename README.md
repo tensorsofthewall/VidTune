@@ -1,3 +1,21 @@
+---
+title: VidTune
+colorFrom: indigo
+colorTo: pink
+sdk: streamlit
+python_version: 3.9.19
+sdk_version: 1.36.0
+suggested_hardware: t4-medium
+suggested_storage: small
+app_file: main.py
+pinned: true
+preload_from_hub:
+- facebook/musicgen-small
+- facebook/musicgen-medium
+- facebook/musicgen-large
+short_description: Generate tailored soundtracks for your videos.
+---
+
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a id="readme-top"></a>
 <!--
