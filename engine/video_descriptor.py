@@ -37,9 +37,9 @@ You must return your response using this JSON schema: {json_schema}
 
 
 class DescribeVideo:
-    def __init__(self, model="flash"):
+    def __init__(self, model="flash", google_api_key=None):
         self.model = self.get_model_name(model)
-        __api_key = self.load_api_key()
+        __api_key = google_api_key # self.load_api_key()
         self.is_safety_set = False
         self.safety_settings = self.get_safety_settings()
 
