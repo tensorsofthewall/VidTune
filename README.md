@@ -126,6 +126,36 @@ While VidTune is supported on CPU-only machines, we recommend using a GPU with m
 ## See VidTune in action!
 [![Watch the video](https://img.youtube.com/vi/knbQjWZtL3Y/maxresdefault.jpg)](https://youtu.be/knbQjWZtL3Y)
 
+## Running VidTune
+First, clone the repository:
+```sh
+git clone https://github.com/sandesh-bharadwaj/VidTune.git
+cd VidTune
+```
+### Using conda
+If you're using conda as your virtual environment manager, do the following:
+```
+conda env create -f environment.yml
+conda activate vidtune
+
+streamlit run main.py
+```
+
+### Using python / pip
+```
+pip install -r requirements.txt
+streamlit run main.py
+```
+
+### Using Docker
+- [Docker](https://docs.docker.com/engine/install/)
+- [Nvidia Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt)
+
+```
+docker run --rm -it --gpus all -p 8003:8003 animikhaich/vidtune
+```
+
+
 
 <!-- ROADMAP -->
 ## Roadmap
