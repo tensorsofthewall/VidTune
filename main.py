@@ -181,6 +181,10 @@ def load_models(video_model_key, music_model_key, google_api_key):
         model=video_model_map[video_model_key], google_api_key=google_api_key
     )
     audio_generator = GenerateAudio(model=music_model_map[music_model_key])
+    if audio_generator.device == "cpu":
+        st.warning(
+            "The music generator model is running on CPU. For faster results, consider using a GPU."
+        )
     return video_descriptor, audio_generator
 
 
