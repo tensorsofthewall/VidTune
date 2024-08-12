@@ -49,13 +49,27 @@ genre_map = {
 
 # Streamlit page configuration
 st.set_page_config(
-    page_title="VidTune: Where Videos Find Their Melody", layout="centered"
+    page_title="VidTune: Where Videos Find Their Melody",
+    layout="centered",
+    page_icon="assets/favicon.png",
 )
 
+left_co, cent_co, last_co = st.columns(3)
+with cent_co:
+    st.image("assets/VidTune-Logo-Without-BG.png", use_column_width=False, width=200)
+
 # Title and Description
-st.title("VidTune: Where Videos Find Their Melody")
-st.write(
-    "VidTune is a web application that allows users to upload videos and generate melodies matching the mood of the video."
+st.markdown(
+    """
+    <style>
+    h2, p, div, img {
+        text-align: center;
+    }
+    </style>
+    <div style="font-size: 35px; font-weight: bold;">VidTune: Where Videos Find Their Melody</div>
+    <p>VidTune is a web application to effortlessly tailor perfect soundtracks for your videos with AI.</p>
+    """,
+    unsafe_allow_html=True,
 )
 
 # Initialize session state for advanced settings and other inputs
@@ -99,7 +113,7 @@ st.sidebar.title("Configuration")
 
 # Google API Key
 st.session_state.google_api_key = st.sidebar.text_input(
-    "Enter your Google API Key to get started:",
+    "Enter your [Google API Key](https://ai.google.dev/gemini-api/docs/api-key) to get started :",
     st.session_state.google_api_key,
     type="password",
 )
