@@ -3,6 +3,7 @@ from engine import DescribeVideo, GenerateAudio
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 from moviepy.audio.fx.volumex import volumex
 import shutil, tempfile, os
+import spaces
 
 # Maps for model selection based on user input
 video_model_map = {
@@ -115,6 +116,7 @@ def generate_video_description(video_descriptor, google_api_key, toggle_advanced
         raise gr.Error("Exception raised: ", e)
 
 # Function to generate music based on the video description    
+@spaces.GPU
 def generate_music(music_generator, music_prompt, num_samples):
     global video_duration, audio_paths, session_dir
     try:
