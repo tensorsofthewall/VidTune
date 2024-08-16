@@ -1,9 +1,10 @@
+import spaces
 import gradio as gr
 from engine import DescribeVideo, GenerateAudio
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 from moviepy.audio.fx.volumex import volumex
 import shutil, tempfile, os
-import spaces
+
 
 # Maps for model selection based on user input
 video_model_map = {
