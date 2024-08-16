@@ -65,6 +65,7 @@ short_description: Generate tailored soundtracks for your videos.
   </p>
 </div>
 
+# Gradio implementation of VidTune for Hugging Face ZeroGPU Spaces.
 
 
 <!-- TABLE OF CONTENTS -->
@@ -104,6 +105,7 @@ short_description: Generate tailored soundtracks for your videos.
 **VidTune** employs two state-of-the-art models for video understanding and music generation:
 1. [**Google Gemini**](https://ai.google.dev/gemini-api) - Google's largest and most capable multimodal AI model.
 2. [**MusicGen**](https://huggingface.co/facebook/musicgen-large) - Meta's text-to-music model, capable of generating high-quality music conditioned on text or audio prompts.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -145,34 +147,34 @@ While VidTune is supported on CPU-only machines, we recommend using a GPU with m
 [![Watch the video](https://img.youtube.com/vi/knbQjWZtL3Y/maxresdefault.jpg)](https://youtu.be/knbQjWZtL3Y)
 
 ## Running VidTune
-First, clone the repository:
+First, clone the repository and switch to the `gradio-dev` branch:
 ```sh
 git clone https://github.com/sandesh-bharadwaj/VidTune.git
 cd VidTune
+git switch gradio-dev
 ```
 ### Using conda
 If you're using conda as your virtual environment manager, do the following:
-```
+```sh
 conda env create -f environment.yml
 conda activate vidtune
 
-streamlit run main.py
+# Hot Reload enabled
+gradio app.py
+
+# w/o Hot Reload
+python app.py
 ```
 
 ### Using python / pip
-```
+```sh
 pip install -r requirements.txt
-streamlit run main.py
-```
 
-### Using Docker
-- [Docker](https://docs.docker.com/engine/install/)
-- [Nvidia Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt)
+# Hot Reload enabled
+gradio app.py
 
-Docker Hub Image: https://hub.docker.com/r/animikhaich/vidtune
-
-```
-docker run --rm -it --gpus all -p 8003:8003 animikhaich/vidtune
+# w/o Hot Reload
+python app.py
 ```
 
 
@@ -183,7 +185,7 @@ docker run --rm -it --gpus all -p 8003:8003 animikhaich/vidtune
 - [x] Flutter version of app for proof-of-concept
 - [x] MusicGen integration
 - [x] Audio Mixing
-- [x] Streamlit app
+- [x] Gradio app
 - [x] Docker image
 - [ ] OpenVINO-optimized versions of MusicGen for CPU-Only use.
 - [ ] Support for music generation duration > 30 seconds.
