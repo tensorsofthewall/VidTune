@@ -2,13 +2,16 @@
 title: VidTune
 colorFrom: indigo
 colorTo: pink
-sdk: streamlit
+sdk: gradio
 python_version: 3.9.19
-sdk_version: 1.36.0
-suggested_hardware: t4-medium
+sdk_version: 4.38.1
 suggested_storage: small
-app_file: main.py
+app_file: app.py
 pinned: true
+models:
+- facebook/musicgen-small
+- facebook/musicgen-medium
+- facebook/musicgen-large
 preload_from_hub:
 - facebook/musicgen-small
 - facebook/musicgen-medium
