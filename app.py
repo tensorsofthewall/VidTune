@@ -117,7 +117,7 @@ def generate_video_description(video_descriptor, google_api_key, toggle_advanced
         raise gr.Error("Exception raised: ", e)
 
 # Function to generate music based on the video description    
-@spaces.GPU
+@spaces.GPU(duration=240)
 def generate_music(music_generator, music_prompt, num_samples):
     global video_duration, audio_paths, session_dir
     try:
@@ -180,8 +180,12 @@ def mix_music_with_video(video_file, dropdown_index, orig_clip_vol, generated_au
     
     return gr.Video(final_video_path, height=640, show_download_button=False, show_label=False, visible=True), gr.DownloadButton("Download final video", value=final_video_path, visible=True, interactive=True)
 
+css = '''
+h2, div, p, img{text-align:center}
+'''
+
 # Gradio Blocks interface
-with gr.Blocks(delete_cache=(1800, 3600)) as demo:
+with gr.Blocks(css=css, delete_cache=(1800, 3600)) as demo:
     # Create session-specific temp dir
     session_dir = create_session_dir()
     
@@ -224,7 +228,8 @@ with gr.Blocks(delete_cache=(1800, 3600)) as demo:
         
         with gr.Column(scale=3.5) as MainWindow:
             # Main window with UI elements
-            gr.Image("assets/VidTune-Logo-Without-BG.png", width=200, interactive=False, show_download_button=False, show_label=False)
+            gr.set_static_paths(paths=["assets/"])
+            gr.Markdown("""<center><img src='/file=assets/VidTune-Logo-Without-BG.png' style="width:200px; margin-bottom:10px"></center>""")
             gr.Markdown(
                 """
                 <div style="font-size: 35px; font-weight: bold;">VidTune: Where Videos Find Their Melody</div>
