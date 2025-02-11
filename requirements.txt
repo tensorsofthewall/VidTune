@@ -183,7 +183,7 @@ spacy-loggers==1.0.5
 srsly==2.4.8
 stack-data==0.6.3
 starlette==0.37.2
-streamlit==1.36.0
+streamlit==1.37.0
 submitit==1.5.1
 sympy==1.13.0
 tenacity==8.5.0
